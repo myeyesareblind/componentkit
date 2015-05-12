@@ -80,6 +80,28 @@
   XCTAssertFalse(controller.calledDidUpdateComponent, @"Component did not update so should not call didUpdateComponent");
 }
 
+- (void)testThatComponentControllerExistsAfterUnmounted {
+  CKComponentLifecycleManager *clm = [[CKComponentLifecycleManager alloc] initWithComponentProvider:[self class]];
+  CKComponentLifecycleManagerState state1 = [clm prepareForUpdateWithModel:nil constrainedSize:{{0,0}, {100, 100}} context:nil];
+  [clm updateWithState:state1];
+
+  UIView *view = [[UIView alloc] init];
+  [clm attachToView:view];
+
+  CKFooComponent *fooComponent1 = (CKFooComponent *)state1.layout.component;
+
+  [clm detachFromView];
+  
+  CKComponentLifecycleManagerState state2 = [clm prepareForUpdateWithModel:nil constrainedSize:{{0,0}, {100, 100}} context:nil];
+  [clm updateWithState:state1];
+  
+  CKFooComponent *fooComponent2 = (CKFooComponent *)state2.layout.component;
+  XCTAssertNotNil(fooComponent2.controller, @"Expected controller to exist");
+  XCTAssertTrue(fooComponent1.controller == fooComponent2.controller,
+                @"Expected controller %@ to match %@",
+                fooComponent1.controller, fooComponent2.controller);
+}
+
 - (void)testThatUpdatingManagerUpdatesComponentController
 {
   CKComponentLifecycleManager *clm = [[CKComponentLifecycleManager alloc] initWithComponentProvider:[self class]];
